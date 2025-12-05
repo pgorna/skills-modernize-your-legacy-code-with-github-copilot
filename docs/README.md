@@ -8,20 +8,19 @@ This is a legacy COBOL-based account management system designed for managing stu
 
 The system consists of three interconnected COBOL programs that work together to provide account management functionality:
 
-```
-┌─────────────┐
-│   main.cob  │  (User Interface & Menu)
-└──────┬──────┘
-       │ calls
-       ▼
-┌─────────────┐
-│operations.cob│ (Business Logic)
-└──────┬──────┘
-       │ calls
-       ▼
-┌─────────────┐
-│  data.cob   │  (Data Persistence Layer)
-└─────────────┘
+```mermaid
+flowchart TD
+    User([Student/User]) -->|Menu Selection| Main[main.cob<br/>User Interface]
+    Main -->|Operation Request| Ops[operations.cob<br/>Business Logic]
+    Ops -->|READ Balance| Data[data.cob<br/>Data Layer]
+    Data -->|Return Balance| Ops
+    Ops -->|WRITE Balance| Data
+    Ops -->|Display Result| User
+    
+    style Main fill:#e1f5ff
+    style Ops fill:#fff4e1
+    style Data fill:#e8f5e9
+    style User fill:#f3e5f5
 ```
 
 ---
@@ -182,26 +181,45 @@ The system consists of three interconnected COBOL programs that work together to
 ## Data Flow Examples
 
 ### Successful Debit Transaction
-```
-User → main.cob (selects option 3)
-  → operations.cob (DEBIT)
-    → data.cob (READ balance)
-    ← returns balance: 1000.00
-  → validates: 500.00 <= 1000.00 ✓
-  → calculates: 1000.00 - 500.00 = 500.00
-    → data.cob (WRITE 500.00)
-  ← displays: "Amount debited. New balance: 500.00"
+```mermaid
+sequenceDiagram
+    actor User as Student
+    participant Main as main.cob
+    participant Ops as operations.cob
+    participant Data as data.cob
+    
+    User->>Main: Select option 3 (Debit)
+    Main->>Ops: CALL 'DEBIT'
+    Ops->>User: Prompt for amount
+    User->>Ops: Enter $500.00
+    Ops->>Data: READ balance
+    Data-->>Ops: Return $1000.00
+    Ops->>Ops: Validate: $500 ≤ $1000 ✓
+    Ops->>Ops: Calculate: $1000 - $500 = $500
+    Ops->>Data: WRITE $500.00
+    Ops-->>Main: Transaction complete
+    Main->>User: Display "New balance: $500.00"
 ```
 
 ### Failed Debit Transaction (Insufficient Funds)
-```
-User → main.cob (selects option 3)
-  → operations.cob (DEBIT)
-    → data.cob (READ balance)
-    ← returns balance: 1000.00
-  → validates: 1500.00 > 1000.00 ✗
-  ← displays: "Insufficient funds for this debit."
-  (balance unchanged at 1000.00)
+```mermaid
+sequenceDiagram
+    actor User as Student
+    participant Main as main.cob
+    participant Ops as operations.cob
+    participant Data as data.cob
+    
+    User->>Main: Select option 3 (Debit)
+    Main->>Ops: CALL 'DEBIT'
+    Ops->>User: Prompt for amount
+    User->>Ops: Enter $1500.00
+    Ops->>Data: READ balance
+    Data-->>Ops: Return $1000.00
+    Ops->>Ops: Validate: $1500 > $1000 ✗
+    Note over Ops: Transaction rejected
+    Ops-->>Main: Transaction failed
+    Main->>User: Display "Insufficient funds"
+    Note over Data: Balance unchanged: $1000.00
 ```
 
 ---
