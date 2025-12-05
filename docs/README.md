@@ -32,12 +32,14 @@ flowchart TD
 **Program ID:** `MainProgram`
 
 **Purpose:**
+
 - Serves as the application entry point and user interface
 - Displays the account management menu
 - Captures user input and routes operations
 - Controls the main program flow loop
 
 **Key Functions:**
+
 - **MAIN-LOGIC:** Primary procedure that runs continuously until the user exits
   - Displays a menu with 4 options
   - Accepts user choice (1-4)
@@ -45,16 +47,19 @@ flowchart TD
   - Manages the application lifecycle
 
 **Working Storage Variables:**
+
 - `USER-CHOICE` (PIC 9): Stores the user's menu selection (1-4)
 - `CONTINUE-FLAG` (PIC X(3)): Controls program execution loop ('YES' or 'NO')
 
 **Menu Options:**
+
 1. View Balance - Displays current account balance
 2. Credit Account - Add funds to the account
 3. Debit Account - Withdraw funds from the account
 4. Exit - Terminate the program
 
 **Business Rules:**
+
 - Input validation: Only accepts choices 1-4
 - Invalid inputs display an error message and re-prompt
 - Program continues until user explicitly selects option 4 (Exit)
@@ -66,6 +71,7 @@ flowchart TD
 **Program ID:** `Operations`
 
 **Purpose:**
+
 - Implements core business operations for account management
 - Acts as an intermediary between the UI (`main.cob`) and data layer (`data.cob`)
 - Enforces business rules for financial transactions
@@ -74,11 +80,13 @@ flowchart TD
 **Key Functions:**
 
 #### **TOTAL Operation** (View Balance)
+
 - Retrieves current balance from the data layer
 - Displays balance to the user
 - No modifications to account state
 
 #### **CREDIT Operation** (Deposit Funds)
+
 - Prompts user for credit amount
 - Retrieves current balance
 - Adds credit amount to balance
@@ -86,6 +94,7 @@ flowchart TD
 - Displays new balance confirmation
 
 #### **DEBIT Operation** (Withdraw Funds)
+
 - Prompts user for debit amount
 - Retrieves current balance
 - **Validates sufficient funds** before processing
@@ -94,18 +103,21 @@ flowchart TD
 - Displays transaction result
 
 **Working Storage Variables:**
+
 - `OPERATION-TYPE` (PIC X(6)): Stores the operation being performed
 - `AMOUNT` (PIC 9(6)V99): Transaction amount (up to 999,999.99)
 - `FINAL-BALANCE` (PIC 9(6)V99): Calculated account balance after operation
 
 **Linkage Section:**
+
 - `PASSED-OPERATION` (PIC X(6)): Receives operation type from caller
 
 **Business Rules:**
-1. **Overdraft Protection:** Debit transactions are rejected if the withdrawal amount exceeds the current balance
-2. **Balance Limits:** Maximum balance/transaction amount is 999,999.99
-3. **Decimal Precision:** All amounts use 2 decimal places for currency accuracy
-4. **Transaction Atomicity:** Balance reads and writes are paired to ensure consistency
+
+- **Overdraft Protection:** Debit transactions are rejected if the withdrawal amount exceeds the current balance
+- **Balance Limits:** Maximum balance/transaction amount is 999,999.99
+- **Decimal Precision:** All amounts use 2 decimal places for currency accuracy
+- **Transaction Atomicity:** Balance reads and writes are paired to ensure consistency
 
 ---
 
@@ -114,6 +126,7 @@ flowchart TD
 **Program ID:** `DataProgram`
 
 **Purpose:**
+
 - Manages persistent storage of account balance
 - Provides abstraction layer for data access
 - Supports read and write operations
@@ -122,28 +135,33 @@ flowchart TD
 **Key Functions:**
 
 #### **READ Operation**
+
 - Returns the current stored balance
 - Does not modify any data
 - Used by operations before any transaction
 
 #### **WRITE Operation**
+
 - Updates the stored balance with new value
 - Overwrites previous balance
 - Called after successful transactions
 
 **Working Storage Variables:**
+
 - `STORAGE-BALANCE` (PIC 9(6)V99): Persistent storage for account balance (default: 1000.00)
 - `OPERATION-TYPE` (PIC X(6)): Internal copy of the requested operation
 
 **Linkage Section:**
+
 - `PASSED-OPERATION` (PIC X(6)): Operation type ('READ' or 'WRITE')
 - `BALANCE` (PIC 9(6)V99): Balance value to read or write
 
 **Business Rules:**
-1. **Initial Balance:** New accounts start with 1,000.00
-2. **Data Isolation:** All balance access must go through this program
-3. **Operation Types:** Only 'READ' and 'WRITE' operations are supported
-4. **Balance Format:** Stored with 2 decimal places (9(6)V99 format)
+
+- **Initial Balance:** New accounts start with 1,000.00
+- **Data Isolation:** All balance access must go through this program
+- **Operation Types:** Only 'READ' and 'WRITE' operations are supported
+- **Balance Format:** Stored with 2 decimal places (9(6)V99 format)
 
 ---
 
@@ -152,26 +170,31 @@ flowchart TD
 ### Student Account Management Rules
 
 1. **Account Initialization**
+
    - Default starting balance: $1,000.00
    - Balance range: $0.00 to $999,999.99
 
 2. **Credit Transactions (Deposits)**
+
    - No maximum deposit limit (within balance capacity)
    - No minimum deposit amount
    - Balance immediately updated upon credit
 
 3. **Debit Transactions (Withdrawals)**
+
    - **Critical Rule:** Insufficient funds prevent withdrawal
    - Cannot overdraw account (balance cannot go negative)
    - Withdrawal rejected if amount > current balance
    - Balance only updated if transaction succeeds
 
 4. **Balance Inquiries**
+
    - Read-only operation
    - Does not modify account state
    - Shows real-time balance
 
 5. **Data Integrity**
+
    - All monetary values use 2 decimal precision
    - Balance persistence maintained across operations
    - Atomic read-modify-write pattern for transactions
@@ -181,6 +204,7 @@ flowchart TD
 ## Data Flow Examples
 
 ### Successful Debit Transaction
+
 ```mermaid
 sequenceDiagram
     actor User as Student
@@ -201,7 +225,8 @@ sequenceDiagram
     Main->>User: Display "New balance: $500.00"
 ```
 
-### Failed Debit Transaction (Insufficient Funds)
+### Insufficient Funds Transaction
+
 ```mermaid
 sequenceDiagram
     actor User as Student
@@ -227,16 +252,19 @@ sequenceDiagram
 ## Technical Specifications
 
 ### Program Communication
+
 - **Inter-program calls:** Uses COBOL `CALL` statement
 - **Parameter passing:** USING clause with LINKAGE SECTION
 - **Return mechanism:** GOBACK statement
 
 ### Data Types
+
 - **Currency amounts:** PIC 9(6)V99 (6 digits, 2 decimal places)
 - **Operation codes:** PIC X(6) (6-character strings)
 - **User choices:** PIC 9 (single digit)
 
 ### Error Handling
+
 - Input validation for menu choices
 - Insufficient funds checking for debits
 - User-friendly error messages
@@ -267,5 +295,5 @@ When modernizing this legacy system, consider:
 
 ---
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 5, 2025  
 **Document Version:** 1.0
